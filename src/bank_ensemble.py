@@ -9,13 +9,12 @@ model = joblib.load("models/Gradient.pkl")
 loan_chatbot_corpus = joblib.load("chatbot/loan_chatbot_corpus.pkl")
 
 st.set_page_config(page_title="Loan Approval System", page_icon="🏦")
-
 st.title("🏦 Loan Approval System")
 
 tabs = st.tabs(["🔮 Loan Prediction", "💬 Loan Chatbot"])
 
 # ==================================================
-# TAB 1: LOAN PREDICTION (FIXED FEATURE ORDER)
+# TAB 1: LOAN PREDICTION (FIXED & COMPLETE)
 # ==================================================
 with tabs[0]:
     st.subheader("Enter Applicant Details")
@@ -26,7 +25,7 @@ with tabs[0]:
         "Education",
         ["Associate", "Bachelor", "Doctorate", "High School", "Master"]
     )
-    person_income = st.number_input("Annual Income", min_value=0)
+    person_income = st.number_input("Annual Income", min_value=1)
     person_emp_exp = st.number_input("Employment Experience (Years)", min_value=0)
 
     home_ownership = st.selectbox(
@@ -43,10 +42,10 @@ with tabs[0]:
     loan_int_rate = st.number_input("Loan Interest Rate (%)", min_value=0.0)
     credit_score = st.number_input("Credit Score", min_value=300, max_value=900)
     previous_default = st.selectbox("Previous Loan Default", ["No", "Yes"])
-    loan_percent_income = loan_amnt / person_income if person_income > 0 else 0
 
-
-    # ===== Label Encoding (MATCH NOTEBOOK) =====
+    # ===============================
+    # LABEL ENCODING (MATCH TRAINING)
+    # ===============================
     gender = 0 if gender == "female" else 1
 
     education_map = {
@@ -78,8 +77,12 @@ with tabs[0]:
     home_ownership = home_ownership_map[home_ownership]
     loan_intent = loan_intent_map[loan_intent]
 
+   
+    loan_percent_income = loan_amnt / person_income
+
     if st.button("Predict Loan Status"):
-        # ⚠️ EXACT FEATURE ORDER (11 features)
+
+        # EXACT FEATURE ORDER (12 FEATURES)
         input_data = np.array([[
             person_age,
             gender,
@@ -103,13 +106,13 @@ with tabs[0]:
             st.error("❌ Loan Not Approved")
 
 # ==================================================
-# TAB 2: CHATBOT (SAFE & SIMPLE)
+# TAB 2: CHATBOT
 # ==================================================
 with tabs[1]:
     st.subheader("💬 Loan Assistance Chatbot")
-    st.write("Ask questions related to loans, approval process, credit score, etc.")
+    st.write("Ask questions related to loans, credit score, approval process, etc.")
 
-    user_question = st.text_input("Type your question here")
+    user_question = st.text_input("Type your question")
 
     if st.button("Get Answer"):
         response = None
