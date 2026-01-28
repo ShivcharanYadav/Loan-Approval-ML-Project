@@ -43,6 +43,8 @@ with tabs[0]:
     loan_int_rate = st.number_input("Loan Interest Rate (%)", min_value=0.0)
     credit_score = st.number_input("Credit Score", min_value=300, max_value=900)
     previous_default = st.selectbox("Previous Loan Default", ["No", "Yes"])
+    loan_percent_income = loan_amnt / person_income if person_income > 0 else 0
+
 
     # ===== Label Encoding (MATCH NOTEBOOK) =====
     gender = 0 if gender == "female" else 1
