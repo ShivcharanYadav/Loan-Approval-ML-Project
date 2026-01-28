@@ -3,54 +3,48 @@ import numpy as np
 import joblib
 
 # ===============================
-# LOAD MODEL & CHATBOT CORPUS
+# LOAD MODEL & CHATBOT
 # ===============================
 model = joblib.load("models/Gradient.pkl")
 loan_chatbot_corpus = joblib.load("chatbot/loan_chatbot_corpus.pkl")
 
-# ===============================
-# PAGE CONFIG
-# ===============================
-st.set_page_config(page_title="Loan Approval System", page_icon="🏦", layout="centered")
-st.title("🏦 Loan Approval Prediction System")
+st.set_page_config(page_title="Loan Approval System", page_icon="🏦")
+
+st.title("🏦 Loan Approval System")
 
 tabs = st.tabs(["🔮 Loan Prediction", "💬 Loan Chatbot"])
 
-# ===============================
-# TAB 1: LOAN PREDICTION
-# ===============================
+# ==================================================
+# TAB 1: LOAN PREDICTION (FIXED FEATURE ORDER)
+# ==================================================
 with tabs[0]:
     st.subheader("Enter Applicant Details")
 
     person_age = st.number_input("Age", min_value=18, max_value=100)
-    person_income = st.number_input("Annual Income", min_value=0)
-    person_emp_exp = st.number_input("Employment Experience (Years)", min_value=0)
-
     gender = st.selectbox("Gender", ["female", "male"])
     education = st.selectbox(
         "Education",
         ["Associate", "Bachelor", "Doctorate", "High School", "Master"]
     )
+    person_income = st.number_input("Annual Income", min_value=0)
+    person_emp_exp = st.number_input("Employment Experience (Years)", min_value=0)
 
     home_ownership = st.selectbox(
         "Home Ownership",
         ["MORTGAGE", "OTHER", "OWN", "RENT"]
     )
 
+    loan_amnt = st.number_input("Loan Amount", min_value=0)
     loan_intent = st.selectbox(
         "Loan Intent",
         ["EDUCATION", "HOMEIMPROVEMENT", "MEDICAL", "PERSONAL", "VENTURE"]
     )
 
-    loan_amnt = st.number_input("Loan Amount", min_value=0)
     loan_int_rate = st.number_input("Loan Interest Rate (%)", min_value=0.0)
     credit_score = st.number_input("Credit Score", min_value=300, max_value=900)
-
     previous_default = st.selectbox("Previous Loan Default", ["No", "Yes"])
 
-    # ===============================
-    # LABEL ENCODING (MATCH NOTEBOOK)
-    # ===============================
+    # ===== Label Encoding (MATCH NOTEBOOK) =====
     gender = 0 if gender == "female" else 1
 
     education_map = {
@@ -83,6 +77,7 @@ with tabs[0]:
     loan_intent = loan_intent_map[loan_intent]
 
     if st.button("Predict Loan Status"):
+        # ⚠️ EXACT FEATURE ORDER (11 features)
         input_data = np.array([[
             person_age,
             gender,
@@ -104,24 +99,24 @@ with tabs[0]:
         else:
             st.error("❌ Loan Not Approved")
 
-# ===============================
-# TAB 2: CHATBOT
-# ===============================
+# ==================================================
+# TAB 2: CHATBOT (SAFE & SIMPLE)
+# ==================================================
 with tabs[1]:
-    st.subheader("Loan Assistance Chatbot")
-    st.write("Ask questions related to loans, credit score, approval process, etc.")
+    st.subheader("💬 Loan Assistance Chatbot")
+    st.write("Ask questions related to loans, approval process, credit score, etc.")
 
-    user_question = st.text_input("Ask a question:")
+    user_question = st.text_input("Type your question here")
 
     if st.button("Get Answer"):
-        answer = None
+        response = None
 
-        for qa in loan_chatbot_corpus:
-            if user_question.lower() in qa["question"].lower():
-                answer = qa["answer"]
+        for item in loan_chatbot_corpus:
+            if user_question.lower() in item["question"].lower():
+                response = item["answer"]
                 break
 
-        if answer:
-            st.success(answer)
+        if response:
+            st.success(response)
         else:
-            st.warning("Sorry, I couldn't find an answer to that question.")
+            st.warning("Sorry, I don't have an answer for that yet.")
