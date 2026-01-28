@@ -1,3 +1,6 @@
+ 🚀 Live Demo (Streamlit App)
+
+🔗 https://loan-approval-ml-project.streamlit.app
 
 Loan Approval Prediction System with Chatbot
 
