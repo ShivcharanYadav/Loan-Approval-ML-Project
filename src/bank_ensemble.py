@@ -9,7 +9,7 @@ model = joblib.load("models/Gradient.pkl")
 loan_chatbot_corpus = joblib.load("chatbot/loan_chatbot_corpus.pkl")
 
 st.set_page_config(page_title="Loan Approval System", page_icon="🏦")
-st.title("🏦 Loan Approval System")
+st.title("🏦 Loan Approval")
 
 tabs = st.tabs(["🔮 Loan Prediction", "💬 Loan Chatbot"])
 
