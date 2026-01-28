@@ -90,6 +90,7 @@ with tabs[0]:
             loan_int_rate,
             credit_score,
             previous_default
+            loan_percent_income
         ]])
 
         prediction = model.predict(input_data)[0]
