@@ -89,7 +89,7 @@ with tabs[0]:
             loan_intent,
             loan_int_rate,
             credit_score,
-            previous_default
+            previous_default,
             loan_percent_income
         ]])
 
