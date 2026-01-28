@@ -2,116 +2,126 @@ import streamlit as st
 import numpy as np
 import joblib
 
-# -------------------------------
-#  LOAD MODEL + CHATBOT CORPUS
-# -------------------------------
-
+# ===============================
+# LOAD MODEL & CHATBOT CORPUS
+# ===============================
 model = joblib.load("models/Gradient.pkl")
 loan_chatbot_corpus = joblib.load("chatbot/loan_chatbot_corpus.pkl")
-  # your saved dictionary corpus
 
-# -------------------------------
-#  SIDEBAR OPTIONS
-# -------------------------------
-st.sidebar.title("Menu")
-option = st.sidebar.radio(
-    "Select an option:",
-    ["Loan Prediction", "Loan Chatbot"]
-)
+# ===============================
+# PAGE CONFIG
+# ===============================
+st.set_page_config(page_title="Loan Approval System", page_icon="🏦", layout="centered")
+st.title("🏦 Loan Approval Prediction System")
 
-# =======================================================================
-#                     OPTION 1: LOAN PREDICTION
-# =======================================================================
-if option == "Loan Prediction":
+tabs = st.tabs(["🔮 Loan Prediction", "💬 Loan Chatbot"])
 
-    st.title("Loan Approval Prediction")
+# ===============================
+# TAB 1: LOAN PREDICTION
+# ===============================
+with tabs[0]:
+    st.subheader("Enter Applicant Details")
 
-    # Encodings
-    gender_encoding = {"female": 0, "male": 1}
-    education_encoding = {"Associate": 0, "Bachelor": 1, "Doctorate": 2, "High School": 3, "Master": 4}
-    home_encoding = {"MORTGAGE": 0, "OTHER": 1, "OWN": 2, "RENT": 3}
-    intent_encoding = {
-        "DEBTCONSOLIDATION": 0, "EDUCATION": 1, "HOMEIMPROVEMENT": 2,
-        "MEDICAL": 3, "PERSONAL": 4, "VENTURE": 5
+    person_age = st.number_input("Age", min_value=18, max_value=100)
+    person_income = st.number_input("Annual Income", min_value=0)
+    person_emp_exp = st.number_input("Employment Experience (Years)", min_value=0)
+
+    gender = st.selectbox("Gender", ["female", "male"])
+    education = st.selectbox(
+        "Education",
+        ["Associate", "Bachelor", "Doctorate", "High School", "Master"]
+    )
+
+    home_ownership = st.selectbox(
+        "Home Ownership",
+        ["MORTGAGE", "OTHER", "OWN", "RENT"]
+    )
+
+    loan_intent = st.selectbox(
+        "Loan Intent",
+        ["EDUCATION", "HOMEIMPROVEMENT", "MEDICAL", "PERSONAL", "VENTURE"]
+    )
+
+    loan_amnt = st.number_input("Loan Amount", min_value=0)
+    loan_int_rate = st.number_input("Loan Interest Rate (%)", min_value=0.0)
+    credit_score = st.number_input("Credit Score", min_value=300, max_value=900)
+
+    previous_default = st.selectbox("Previous Loan Default", ["No", "Yes"])
+
+    # ===============================
+    # LABEL ENCODING (MATCH NOTEBOOK)
+    # ===============================
+    gender = 0 if gender == "female" else 1
+
+    education_map = {
+        "Associate": 0,
+        "Bachelor": 1,
+        "Doctorate": 2,
+        "High School": 3,
+        "Master": 4
     }
-    defaults_encoding = {"No": 0, "Yes": 1}
 
-    # Inputs
-    person_age = st.number_input("person_age", value=30)
+    home_ownership_map = {
+        "MORTGAGE": 0,
+        "OTHER": 1,
+        "OWN": 2,
+        "RENT": 3
+    }
 
-    person_gender_label = st.radio("person_gender", options=["female", "male"])
-    person_gender = gender_encoding[person_gender_label]
+    loan_intent_map = {
+        "EDUCATION": 0,
+        "HOMEIMPROVEMENT": 1,
+        "MEDICAL": 2,
+        "PERSONAL": 3,
+        "VENTURE": 4
+    }
 
-    person_education_label = st.radio(
-        "person_education",
-        options=["Associate", "Bachelor", "Doctorate", "High School", "Master"]
-    )
-    person_education = education_encoding[person_education_label]
+    previous_default = 0 if previous_default == "No" else 1
 
-    person_income = st.number_input("person_income", value=50000)
-    person_emp_exp = st.number_input("person_emp_exp", value=3)
+    education = education_map[education]
+    home_ownership = home_ownership_map[home_ownership]
+    loan_intent = loan_intent_map[loan_intent]
 
-    person_home_label = st.radio("person_home_ownership", options=["MORTGAGE", "OTHER", "OWN", "RENT"])
-    person_home_ownership = home_encoding[person_home_label]
+    if st.button("Predict Loan Status"):
+        input_data = np.array([[
+            person_age,
+            gender,
+            education,
+            person_income,
+            person_emp_exp,
+            home_ownership,
+            loan_amnt,
+            loan_intent,
+            loan_int_rate,
+            credit_score,
+            previous_default
+        ]])
 
-    loan_amnt = st.number_input("loan_amnt", value=10000)
+        prediction = model.predict(input_data)[0]
 
-    loan_intent_label = st.radio(
-        "loan_intent",
-        options=["DEBTCONSOLIDATION", "EDUCATION", "HOMEIMPROVEMENT", "MEDICAL", "PERSONAL", "VENTURE"]
-    )
-    loan_intent = intent_encoding[loan_intent_label]
-
-    loan_int_rate = st.number_input("loan_int_rate", value=10.0, format="%.3f")
-    loan_percent_income = st.number_input("loan_percent_income", value=0.2, format="%.3f")
-    cb_person_cred_hist_length = st.number_input("cb_person_cred_hist_length", value=5)
-    credit_score = st.number_input("credit_score", value=650)
-
-    previous_loan_label = st.radio("previous_loan_defaults_on_file", options=["No", "Yes"])
-    previous_loan_defaults_on_file = defaults_encoding[previous_loan_label]
-
-    # Create feature array
-    features = np.array([[
-        person_age,
-        person_gender,
-        person_education,
-        person_income,
-        person_emp_exp,
-        person_home_ownership,
-        loan_amnt,
-        loan_intent,
-        loan_int_rate,
-        loan_percent_income,
-        cb_person_cred_hist_length,
-        credit_score,
-        previous_loan_defaults_on_file
-    ]], dtype=float)
-
-    # Predict
-    if st.button("Predict"):
-        pred = model.predict(features)[0]
-
-        if pred == 1:
-            st.success("Loan Approved (1)")
+        if prediction == 1:
+            st.success("✅ Loan Approved")
         else:
-            st.error("Loan Not Approved (0)")
+            st.error("❌ Loan Not Approved")
 
-# =======================================================================
-#                     OPTION 2: CHATBOT
-# =======================================================================
-else:
-    st.title("Loan Project Chatbot 🤖")
-    st.write("Ask me anything about dataset, encoding, models, or the project.")
+# ===============================
+# TAB 2: CHATBOT
+# ===============================
+with tabs[1]:
+    st.subheader("Loan Assistance Chatbot")
+    st.write("Ask questions related to loans, credit score, approval process, etc.")
 
-    user_q = st.text_input("Ask your question:")
+    user_question = st.text_input("Ask a question:")
 
-    if st.button("Chat"):
-        user_q_lower = user_q.lower()
-        reply = "Sorry, I didn't understand. Try asking about dataset, models, encoding, or accuracy."
+    if st.button("Get Answer"):
+        answer = None
 
-        for key in loan_chatbot_corpus:
-            if key in user_q_lower:
-                reply = loan_chatbot_corpus[key]
+        for qa in loan_chatbot_corpus:
+            if user_question.lower() in qa["question"].lower():
+                answer = qa["answer"]
                 break
 
-        st.write("**Bot:**", reply)
+        if answer:
+            st.success(answer)
+        else:
+            st.warning("Sorry, I couldn't find an answer to that question.")
